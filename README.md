@@ -1,9 +1,10 @@
-# Module Coupon giving a product Thelia 2
+# Coupon giving a free product 
+## Thelia 2 Module
 
-This module is used to allow to generate coupon giving a product to a customer
-Thid will allow a Customer to get a predifined product if he enters the coupon code and meets its conditions.
+This module is used to allow an admin to generate Coupon giving a free product to a customer.
+Thid will allow a Customer to get a predifined product for free if he enters the Cupon code and meets its conditions.
 
-This is used a example for the Coupon module.
+This is used as an example for the Coupon module.
 
 ## How to install
 
