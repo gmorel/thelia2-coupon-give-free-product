@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<config xmlns="http://thelia.net/schema/dic/config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
+
+    <services>
+        <service id="thelia.coupon.type.give_product" class="CouponGiveProduct\Coupon\Type\GiveProduct">
+            <argument type="service" id="thelia.facade" />
+            <tag name="thelia.coupon.addCoupon"/>
+        </service>
+    </services>
+
+</config>
