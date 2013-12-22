@@ -119,7 +119,7 @@ class GiveProduct extends CouponAbstract
         //  We need to check if the free product has already been inserted in the Cart
         if (!$this->isAlreadyInCart($this->productSaleElementsId)) {
 
-            /** @var ProductSaleElements $productSaleElements */
+            /** @var ProductSaleElements $productToGive */
             $productToGive = $this->getFreeProduct();
             $this->addProductToCustomerCart($productToGive);
 
