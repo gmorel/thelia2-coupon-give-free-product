@@ -14,7 +14,7 @@ You can download the .zip file of this module or create a git submodule into you
 
 ```
 cd /path-to-thelia
-git submodule add https://github.com/gmorel/thelia-coupon-give-product.git local/modules/CouponGiveProduct
+git submodule add https://github.com/gmorel/thelia2-coupon-give-free-product.git local/modules/CouponGiveProduct
 ```
 
 Next, go to your Thelia admin panel for module activation.
