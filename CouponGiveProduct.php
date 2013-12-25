@@ -28,10 +28,10 @@ use Thelia\Module\BaseModule;
 
 /**
  * Created by JetBrains PhpStorm.
- * Date: 8/19/13
- * Time: 3:24 PM
+ * Date: 20/12/13
+ * Time: 19:24 PM
  *
- * Allow to add a given product to the Customer cart for free
+ * Allow to inform Thelia2 the module exists
  *
  * @package Coupon
  * @author  Guillaume MOREL <gmorel@openstudio.fr>

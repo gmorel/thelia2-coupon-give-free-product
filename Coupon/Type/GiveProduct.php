@@ -28,15 +28,13 @@ use Thelia\Core\Event\TheliaEvents;
 use Thelia\Coupon\FacadeInterface;
 use Thelia\Coupon\Type\CouponAbstract;
 use Thelia\Model\CartItem;
-use Thelia\Model\Product;
-use Thelia\Model\ProductQuery;
 use Thelia\Model\ProductSaleElements;
 use Thelia\Model\ProductSaleElementsQuery;
 
 /**
  * Created by JetBrains PhpStorm.
- * Date: 8/19/13
- * Time: 3:24 PM
+ * Date: 20/12/13
+ * Time: 19:24 PM
  *
  * Allow to add a given product to the Customer cart for free
  *
@@ -46,6 +44,8 @@ use Thelia\Model\ProductSaleElementsQuery;
  */
 class GiveProduct extends CouponAbstract
 {
+    const FREE_CART_ITEM_NAME = 'Product for free';
+
     /** @var string Service Id  */
     protected $serviceId = 'thelia.coupon.type.give_product';
 
@@ -140,7 +140,19 @@ class GiveProduct extends CouponAbstract
     {
         return $this->facade
             ->getTranslator()
-            ->trans('Add a free product to the customer cart', array(), 'constraint');
+            ->trans('Add a free product to the customer cart', array(), 'coupon');
+    }
+
+    /**
+     * Get I18n amount input name
+     *
+     * @return string
+     */
+    public function getInputName()
+    {
+        return $this->facade
+            ->getTranslator()
+            ->trans('Product sale element id added to the cart', array(), 'coupon');
     }
 
     /**
@@ -153,9 +165,9 @@ class GiveProduct extends CouponAbstract
         $toolTip = $this->facade
             ->getTranslator()
             ->trans(
-                'This Coupon will give the associated product to the customer cart. The Coupon will make sure one order can get only one free product. Please add into the "Amount" input the id of the product you wish to offer.',
+                'This Coupon will give the associated product to the customer cart. The Coupon will make sure one order can get only one free product.',
                 array(),
-                'constraint'
+                'coupon'
             );
 
         return $toolTip;
@@ -236,4 +248,16 @@ class GiveProduct extends CouponAbstract
 
         return $return;
     }
+
+    /**
+     * Get Product Sale Element id to give
+     *
+     * @return int
+     */
+    public function getProductSaleElementsId()
+    {
+        return $this->productSaleElementsId;
+    }
+
+
 }

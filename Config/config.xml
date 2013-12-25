@@ -9,6 +9,10 @@
             <argument type="service" id="thelia.facade" />
             <tag name="thelia.coupon.addCoupon"/>
         </service>
+        <service id="coupon_give_product.action" class="CouponGiveProduct\Action\CouponGiveProduct">
+            <argument type="service" id="service_container"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
     </services>
 
 </config>
