@@ -45,9 +45,9 @@ use Thelia\Model\ProductSaleElementsQuery;
  */
 class GiveProduct extends CouponAbstract
 {
-    const FREE_CART_ITEM_NAME = 'Product for free';
-
+    /** ProductSaleElement id input name */
     const INPUT_PRODUCT_SALE_ELEMENT_ID_NAME = 'product_sale_element_id';
+    /** Product quantity input name */
     const INPUT_QUANTITY_NAME = 'quantity';
 
     /** @var string Service Id  */
@@ -58,6 +58,12 @@ class GiveProduct extends CouponAbstract
 
     /** @var int Quantity of Free product given for a Coupon */
     protected $quantity = 1;
+
+    /** @var array Extended Inputs to manage */
+    protected $extendedInputs = array(
+        self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME,
+        self::INPUT_QUANTITY_NAME
+    );
 
     /**
      * Set Coupon
@@ -93,13 +99,15 @@ class GiveProduct extends CouponAbstract
         \DateTime $expirationDate
     )
     {
+        // We use the default behavior we will extend
         parent::set(
             $facade, $code, $title, $shortDescription, $description, $effects, $isCumulative, $isRemovingPostage, $isAvailableOnSpecialOffers, $isEnabled, $maxUsage, $expirationDate
         );
-        if(isset($effects[self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME])) {
+
+        if (isset($effects[self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME])) {
             $this->productSaleElementsId = $effects[self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME];
         }
-        if(isset($effects[self::INPUT_QUANTITY_NAME])) {
+        if (isset($effects[self::INPUT_QUANTITY_NAME])) {
             $this->quantity = $effects[self::INPUT_QUANTITY_NAME];
         }
 
@@ -268,6 +276,16 @@ class GiveProduct extends CouponAbstract
     public function getProductSaleElementsId()
     {
         return $this->productSaleElementsId;
+    }
+
+    /**
+     * Get quantity to give
+     *
+     * @return int
+     */
+    public function getQuantity()
+    {
+        return $this->quantity;
     }
 
     /**
