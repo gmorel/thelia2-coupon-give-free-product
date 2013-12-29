@@ -97,30 +97,64 @@ class CouponGiveProduct extends BaseAction implements EventSubscriberInterface
      */
     public function updateExtendedPostParameters(CouponCreateOrUpdateEvent $event)
     {
-        $isModified = false;
         /** @var Request $request */
         $request = $this->container->get('request');
         $postData = $request->request;
+        
         // Validate quantity input
         if ($postData->has(GiveProduct::INPUT_EXTENDED__NAME) ) {
-            $model = $event->getCouponModel();
-            $effects = $model->getEffects();
+            $effects = $event->getEffects();
             $extentedPostParameters = $postData->get(GiveProduct::INPUT_EXTENDED__NAME);
 
-            list($effects, $isModified) = $this->updateProductSaleElementId($extentedPostParameters, $effects);
-            if ($isModified) {
-                list($effects, $isModified) = $this->updateQuantity($extentedPostParameters, $effects);
-            }
+            $effects = $this->updateProductSaleElementId($extentedPostParameters, $effects);
+            $effects = $this->updateQuantity($extentedPostParameters, $effects);
 
-            if ($isModified) {
-                $model->setEffects($effects);
-                $model->save();
-            }
+            $event->setEffects($effects);
         }
     }
 
     /**
+     * Update Coupon GiveProduct Product Sale Element id to give
      *
+     * @param array $extentedPostParameters
+     * @param array $effects
+     *
+     * @return array
+     */
+    protected function updateProductSaleElementId($extentedPostParameters, $effects)
+    {
+        if (isset($extentedPostParameters[GiveProduct::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME])) {
+            $productSaleElementId = intval($extentedPostParameters[GiveProduct::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME]);
+            if ($productSaleElementId > 0) {
+
+                $effects[GiveProduct::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME] = $productSaleElementId;
+            }
+        }
+
+        return $effects;
+    }
+
+    /**
+     * Update Coupon GiveProduct quantity to give
+     *
+     * @param array $extentedPostParameters
+     * @param array $effects
+     *
+     * @return array
+     */
+    protected function updateQuantity($extentedPostParameters, $effects)
+    {
+        if (isset($extentedPostParameters[GiveProduct::INPUT_QUANTITY_NAME])) {
+            $quantity = intval($extentedPostParameters[GiveProduct::INPUT_QUANTITY_NAME]);
+            if ($quantity > 0) {
+                $effects[GiveProduct::INPUT_QUANTITY_NAME] = $quantity;
+            }
+        }
+
+        return $effects;
+    }
+
+    /**
      * Returns an array of event names this subscriber wants to listen to.
      *
      * The array keys are event names and the value can be:
@@ -150,52 +184,10 @@ class CouponGiveProduct extends BaseAction implements EventSubscriberInterface
             // will be called after
             // Thelia\Action\Cart::addItem()
             TheliaEvents::CART_ADDITEM => array('setCartItemAsFree', 127),
-            // Will manage the added input (quantity)
-            TheliaEvents::COUPON_CREATE => array("updateExtendedPostParameters", 127),
-            TheliaEvents::COUPON_UPDATE => array("updateExtendedPostParameters", 127),
+            // Will manage the added input (product sale elementid / quantity)
+            // Before giving the event to the thelia2 core Coupon action
+            TheliaEvents::COUPON_CREATE => array('updateExtendedPostParameters', 129),
+            TheliaEvents::COUPON_UPDATE => array('updateExtendedPostParameters', 129),
         );
-    }
-
-    /**
-     * Update Coupon GiveProduct Product Sale Element id to give
-     *
-     * @param array $extentedPostParameters
-     * @param array $effects
-     *
-     * @return array
-     */
-    protected function updateProductSaleElementId($extentedPostParameters, $effects)
-    {
-        $isModified = false;
-        if (isset($extentedPostParameters[GiveProduct::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME])) {
-            $productSaleElementId = intval($extentedPostParameters[GiveProduct::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME]);
-            if ($productSaleElementId > 0) {
-
-                $effects[GiveProduct::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME] = $productSaleElementId;
-                $isModified = true;
-            }
-        }
-        return array($effects, $isModified);
-    }
-
-    /**
-     * Update Coupon GiveProduct quantity to give
-     *
-     * @param array $extentedPostParameters
-     * @param array $effects
-     *
-     * @return array
-     */
-    protected function updateQuantity($extentedPostParameters, $effects)
-    {
-        $isModified = false;
-        if (isset($extentedPostParameters[GiveProduct::INPUT_QUANTITY_NAME])) {
-            $quantity = intval($extentedPostParameters[GiveProduct::INPUT_QUANTITY_NAME]);
-            if ($quantity > 0) {
-                $effects[GiveProduct::INPUT_QUANTITY_NAME] = $quantity;
-                $isModified = true;
-            }
-        }
-        return array($effects, $isModified);
     }
 }
