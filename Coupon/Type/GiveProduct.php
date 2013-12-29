@@ -23,6 +23,7 @@
 
 namespace CouponGiveProduct\Coupon\Type;
 
+use Thelia\Action\ProductSaleElement;
 use Thelia\Core\Event\Cart\CartEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Coupon\FacadeInterface;
@@ -46,11 +47,17 @@ class GiveProduct extends CouponAbstract
 {
     const FREE_CART_ITEM_NAME = 'Product for free';
 
+    const INPUT_PRODUCT_SALE_ELEMENT_ID_NAME = 'product_sale_element_id';
+    const INPUT_QUANTITY_NAME = 'quantity';
+
     /** @var string Service Id  */
     protected $serviceId = 'thelia.coupon.type.give_product';
 
     /** @var int Product Sale Element id you wish to offer */
     protected $productSaleElementsId = 0;
+
+    /** @var int Quantity of Free product given for a Coupon */
+    protected $quantity = 1;
 
     /**
      * Set Coupon
@@ -60,7 +67,7 @@ class GiveProduct extends CouponAbstract
      * @param string          $title                      Coupon title (ex: Coupon for XMAS)
      * @param string          $shortDescription           Coupon short description
      * @param string          $description                Coupon description
-     * @param int             $productSaleElementsId      Product Sale Element id you wish to offer
+     * @param array           $effects                    Coupon effects params
      * @param bool            $isCumulative               If Coupon is cumulative
      * @param bool            $isRemovingPostage          If Coupon is removing postage
      * @param bool            $isAvailableOnSpecialOffers If available on Product already
@@ -77,7 +84,7 @@ class GiveProduct extends CouponAbstract
         $title,
         $shortDescription,
         $description,
-        $productSaleElementsId,
+        array $effects,
         $isCumulative,
         $isRemovingPostage,
         $isAvailableOnSpecialOffers,
@@ -86,21 +93,15 @@ class GiveProduct extends CouponAbstract
         \DateTime $expirationDate
     )
     {
-        $this->code = $code;
-        $this->title = $title;
-        $this->shortDescription = $shortDescription;
-        $this->description = $description;
-
-        $this->isCumulative = $isCumulative;
-        $this->isRemovingPostage = $isRemovingPostage;
-
-        $this->productSaleElementsId = $productSaleElementsId;
-
-        $this->isAvailableOnSpecialOffers = $isAvailableOnSpecialOffers;
-        $this->isEnabled = $isEnabled;
-        $this->maxUsage = $maxUsage;
-        $this->expirationDate = $expirationDate;
-        $this->facade = $facade;
+        parent::set(
+            $facade, $code, $title, $shortDescription, $description, $effects, $isCumulative, $isRemovingPostage, $isAvailableOnSpecialOffers, $isEnabled, $maxUsage, $expirationDate
+        );
+        if(isset($effects[self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME])) {
+            $this->productSaleElementsId = $effects[self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME];
+        }
+        if(isset($effects[self::INPUT_QUANTITY_NAME])) {
+            $this->quantity = $effects[self::INPUT_QUANTITY_NAME];
+        }
 
         return $this;
     }
@@ -113,6 +114,8 @@ class GiveProduct extends CouponAbstract
      */
     public function exec()
     {
+        // The CartItem price will be set to 0
+        // So no need to return a discount
         $discount = 0;
 
         // Since the exec method will be called each time the cart checks its integrity
@@ -122,10 +125,6 @@ class GiveProduct extends CouponAbstract
             /** @var ProductSaleElements $productToGive */
             $productToGive = $this->getFreeProduct();
             $this->addProductToCustomerCart($productToGive);
-
-            // We return the product price in order to deduct it from the Cart
-            // Otherwise the product would not be given for free
-            $discount = $productToGive->getPrice();
         }
 
         return $discount;
@@ -152,7 +151,19 @@ class GiveProduct extends CouponAbstract
     {
         return $this->facade
             ->getTranslator()
-            ->trans('Product sale element id added to the cart', array(), 'coupon');
+            ->trans('Product Sale Element added to the cart', array(), 'coupon');
+    }
+
+    /**
+     * Get I18n amount input name
+     *
+     * @return string
+     */
+    public function getInputQuantityName()
+    {
+        return $this->facade
+            ->getTranslator()
+            ->trans('Number of product added to the cart when entering this Coupon', array(), 'coupon');
     }
 
     /**
@@ -199,7 +210,7 @@ class GiveProduct extends CouponAbstract
         $cartEvent = $this->getCartEvent();
         $cartEvent->setNewness(true);
         $cartEvent->setAppend(true);
-        $cartEvent->setQuantity(1);
+        $cartEvent->setQuantity($this->quantity);
         $cartEvent->setProductSaleElementsId($this->productSaleElementsId);
         $cartEvent->setProduct($productSaleElements->getProductId());
 
@@ -259,5 +270,66 @@ class GiveProduct extends CouponAbstract
         return $this->productSaleElementsId;
     }
 
+    /**
+     * Draw the input displayed in the BackOffice
+     * allowing Admin to set its Coupon effect
+     *
+     * @return string HTML string
+     */
+    public function drawBackOfficeInputs()
+    {
+        $labelProductSaleElementId = $this->getInputName();
+        $labelQuantity = $this->getInputQuantityName();
+        $value = $this->productSaleElementsId;
+
+        $innerSelectHtml = $this->drawBackOfficePSESelect($value);
+
+        $html = '
+                <input type="hidden" name="thelia_coupon_creation[' . self::INPUT_AMOUNT_NAME . ']" value="0"/>
+                <div class="form-group input-' . self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME . '">
+                    <label for="' . self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME . '" class="control-label">' . $labelProductSaleElementId . '</label>
+                    <select id="' . self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME . '" class="form-control" name="' . self::INPUT_EXTENDED__NAME . '[' . self::INPUT_PRODUCT_SALE_ELEMENT_ID_NAME . ']' . '" >' . $innerSelectHtml . '</select>
+                </div>
+                <div class="form-group input-' . self::INPUT_QUANTITY_NAME . '">
+                    <label for="' . self::INPUT_QUANTITY_NAME . '" class="control-label">' . $labelQuantity . '</label>
+                    <input id="' . self::INPUT_QUANTITY_NAME . '" class="form-control" name="' . self::INPUT_EXTENDED__NAME . '[' . self::INPUT_QUANTITY_NAME . ']' . '" type="text" value="' . $this->quantity . '"/>
+                </div>
+            ';
+
+        return $html;
+    }
+
+    /**
+     * Draw the select displayed in the BackOffice
+     * allowing Admin to set its Coupon effect
+     *
+     * @return string HTML string
+     *
+     * @param int $value Already set Id
+     *
+     * @return string HTML select string
+     */
+    protected function drawBackOfficePSESelect($value)
+    {
+        $productSaleElementsQuery = ProductSaleElementsQuery::create();
+        $productSaleElements = $productSaleElementsQuery->find();
+
+        $innerSelectHtml = '';
+        /** @var ProductSaleElements $productSaleElement */
+        foreach ($productSaleElements as $productSaleElement) {
+            $selected = '';
+            if ($productSaleElement->getId() == $value) {
+                $selected = ' selected="selected"';
+            }
+            $option = '
+            <option value="' . $productSaleElement->getId() . '" ' . $selected . '>
+                ' . $productSaleElement->getProduct()->getTitle() . ' (' . $productSaleElement->getRef() . ')
+            </option>';
+
+            $innerSelectHtml .= $option;
+        }
+
+        return $innerSelectHtml;
+    }
 
 }
